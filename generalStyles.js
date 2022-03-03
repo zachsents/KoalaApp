@@ -34,29 +34,6 @@ export const styles = StyleSheet.create({
         height: 200,
         resizeMode: 'contain',
     },
-    button: {
-        backgroundColor: palette.white,
-        paddingVertical: 20,
-        paddingHorizontal: 40,
-        marginTop: 100,
-        borderRadius: 6
-    },
-    buttonText: {
-        ...text,
-        fontSize: 18,
-        color: palette.raisin
-    },
-    list: {
-        marginTop: 100,
-        backgroundColor: palette.whiteOverlay,
-        width: '75%',
-        height: 300,
-        borderRadius: 6
-    },
-    listItem: {
-        paddingVertical: 20,
-        paddingHorizontal: 40
-    },
     loading: {
         marginTop: 100
     }

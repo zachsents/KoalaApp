@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import {
-    Text, View, Image, TouchableOpacity,
-    ScrollView, PermissionsAndroid, ActivityIndicator
+    Text, View, Image, PermissionsAndroid, ActivityIndicator
 } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
 
+import Button from './Button'
+import DataTable from './DataTable'
 import { palette, styles } from '../generalStyles'
+
+import { useStateList } from '../hooks'
 
 
 // Bluetooth states
@@ -21,14 +24,7 @@ export default function BluetoothView({ bleManager, setDeviceConnection }) {
 
     // Stateful stuff
     const [connState, setConnState] = useState(UNCONNECTED)
-    const [discoveredDevices, setDiscoveredDevices] = useState([])
-    const addDiscoveredDevice = device => {
-        // make sure list doesn't have ID
-        if (!discoveredDevices.map(d => d.id).includes(device.id)) {
-            console.log('Found device:', device.name)
-            setDiscoveredDevices([device, ...discoveredDevices])
-        }
-    }
+    const [discoveredDevices, _, addDiscoveredDevice] = useStateList([], 'id')
 
     // Search for devices
     async function scanForDevices() {
@@ -49,6 +45,7 @@ export default function BluetoothView({ bleManager, setDeviceConnection }) {
             }
 
             device.name?.startsWith('Koala') && addDiscoveredDevice(device)
+            // device.name && addDiscoveredDevice(device)
         })
     }
 
@@ -72,16 +69,20 @@ export default function BluetoothView({ bleManager, setDeviceConnection }) {
                 // search for services and characteristics
                 await device.discoverAllServicesAndCharacteristics()
                 const services = await device.services()
+                
+                // find readable characteristics
+                const characteristics = (await Promise.all(
+                    services.map(async service => {
+                        return (await device.characteristicsForService(service.uuid))
+                            .filter(c => c.isReadable)
+                    })
+                )).flat()
 
-                // only interested in one service
-                const characteristics = await device.characteristicsForService(MEASUREMENT_SERVICE)
-
-                // look for readable characteristics
-                const readChar = characteristics.find(c => c.isReadable)
                 // TO DO: look for writable characteristic for 2-way comms
+                // TO DO: differentiate between measurement and error characteristics
 
                 setDeviceConnection({
-                    device, characteristic: readChar
+                    device, characteristics
                 })
             })
             .catch(error => {
@@ -93,22 +94,12 @@ export default function BluetoothView({ bleManager, setDeviceConnection }) {
         switch (connState) {
             case UNCONNECTED:
                 return (
-                    <TouchableOpacity onPress={scanForDevices} style={styles.button}>
-                        <Text style={styles.buttonText}>Pair a Device</Text>
-                    </TouchableOpacity>
+                    <Button onPress={scanForDevices}>Pair a Device</Button>
                 )
             case SCANNING:
-                return (
-                    <View style={styles.list}>
-                        <ScrollView>{
-                            discoveredDevices.map(({ name, id }) => (
-                                <TouchableOpacity key={id} onPress={() => connectDevice(id)} style={styles.listItem}>
-                                    <Text style={styles.text}>{name}</Text>
-                                </TouchableOpacity>
-                            ))
-                        }</ScrollView>
-                    </View>
-                )
+                return <DataTable onPress={connectDevice} list={
+                    discoveredDevices.map(d => ({ key: d.id, label: d.name }))
+                } />
             case CONNECTED:
             case CONNECTING:
                 return (
@@ -129,4 +120,4 @@ export default function BluetoothView({ bleManager, setDeviceConnection }) {
             <StatusBar style="auto" />
         </View>
     )
-}
+  }
