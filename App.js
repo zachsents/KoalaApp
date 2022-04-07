@@ -1,9 +1,14 @@
 import { useEffect, useState } from 'react'
 
-import { BleManager } from 'react-native-ble-plx'
+import { BluetoothProvider } from './components/Bluetooth'
 
-import BluetoothView from './components/BluetoothView'
-import DashboardView from './components/DashboardView'
+import Dashboard from './screens/Dashboard'
+import Map from './screens/Map'
+import Device from './screens/Device'
+
+import Navigation from './components/Navigation'
+import { LightTheme } from './theme'
+
 
 // App states
 const BLUETOOTH = 'bluetooth'
@@ -13,48 +18,26 @@ const DASHBOARD = 'dashboard'
 export default function App() {
 
     // View state machine
-    const [appState, setAppState] = useState(BLUETOOTH)
-
-    // Bluetooth-related states
-    const [bleManager, setBLEManager] = useState(null)
-    const [deviceConnection, setDeviceConnection] = useState(null)
+    const [appState, setAppState] = useState(DASHBOARD)
 
 
-    // Look for changes in the device connection
-    useEffect(() => {
-        deviceConnection?.device && setAppState(DASHBOARD)
-    }, [deviceConnection])
+    // // Look for changes in the device connection
+    // useEffect(() => {
+    //     deviceConnection?.device && setAppState(DASHBOARD)
+    // }, [deviceConnection])
 
 
-    // Mount & unmount
-    useEffect(() => {
-        // destroyBLE(bleManager)
-        setBLEManager(new BleManager())
+    
 
-        return () => {
-            destroyBLE(bleManager)
-            setBLEManager(null)
-        }
-    }, [])
-
-
-    function renderView() {
-        switch (appState) {
-            case BLUETOOTH:
-                return <BluetoothView bleManager={bleManager} setDeviceConnection={setDeviceConnection} />
-            case DASHBOARD:
-                return <DashboardView deviceConnection={deviceConnection} />
-        }
-    }
-
-    return renderView()
-}
-
-
-function destroyBLE(manager) {
-    try {
-        manager && manager.destroy()
-    } catch (err) {
-
-    }
+    return (
+        <BluetoothProvider>
+            <Navigation
+                theme={LightTheme}
+                labels={['Dashboard', 'Map', 'Device']}>
+                <Dashboard />
+                <Map />
+                <Device displayBadgeForError />
+            </Navigation>
+        </BluetoothProvider>
+    )
 }
