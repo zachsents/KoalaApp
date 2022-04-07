@@ -1,16 +1,26 @@
 import { useState, useEffect } from 'react'
-import { StyleSheet, ScrollView } from 'react-native'
+import { StyleSheet, ScrollView, Text } from 'react-native'
 
 import CircleIndicator from '../components/CircleIndicator'
 import Group from '../components/Group'
 import Space from '../components/Space'
 import { useBluetooth } from '../components/Bluetooth'
 
+import Button from '../components/Button'
+
+
 export default function Dashboard() {
 
     const { lastDataPoint } = useBluetooth()
 
+    const time = new Date()
+
     return (
+      <>
+        <Text>
+          {lastDataPoint?.time}
+        </Text>
+
         <ScrollView style={styles.view}>
             <Group style={styles.groups} >
                 <CircleIndicator label='AQI' number={lastDataPoint?.aqi} max={400} size={120} />
@@ -27,14 +37,32 @@ export default function Dashboard() {
                 <CircleIndicator label='PM' number={lastDataPoint?.pm25} max={100} unit='ppm' />
             </Group>
             <Space />
+            <Text>
+              GPS data:
+            </Text>
+            <Text>
+              {lastDataPoint?.latitude}
+            </Text>
+            <Text>
+              {lastDataPoint?.longitude}
+            </Text>
+            <Button> Sync</Button>
+            <Space size={100} />
         </ScrollView>
+
+
+
+
+
+
+        </>
     )
 }
 
 const styles = StyleSheet.create({
     view: {
         paddingTop: 40,
-    }, 
+    },
     groups: {
         marginBottom: 20,
     }
