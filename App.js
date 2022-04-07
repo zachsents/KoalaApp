@@ -25,8 +25,6 @@ export default function App() {
     // useEffect(() => {
     //     deviceConnection?.device && setAppState(DASHBOARD)
     // }, [deviceConnection])
-
-
     
 
     return (
