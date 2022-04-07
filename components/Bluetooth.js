@@ -1,14 +1,16 @@
-import { useState } from 'react'
+import { useState, useEffect, createContext, useContext } from 'react'
+import { Buffer } from 'buffer'
 import {
     Text, View, Image, PermissionsAndroid, ActivityIndicator
 } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
+import { BleManager } from 'react-native-ble-plx'
 
 import Button from './Button'
 import DataTable from './DataTable'
 import { palette, styles } from '../generalStyles'
 
-import { useStateList } from '../hooks'
+import { useDatabase, useStateList } from '../hooks'
 
 
 // Bluetooth states
@@ -19,12 +21,26 @@ const CONNECTED = 'connected'
 
 const MEASUREMENT_SERVICE = '6e400001-b5a3-f393-e0a9-e50e24dcca9e'
 
+var incompleteData = ''
 
-export default function BluetoothView({ bleManager, setDeviceConnection }) {
+const insertIntoDatabase = useDatabase()
+
+const BluetoothContext = createContext({})
+
+export function useBluetooth() {
+    return useContext(BluetoothContext)
+}
+
+
+export function BluetoothProvider({ children }) {
 
     // Stateful stuff
     const [connState, setConnState] = useState(UNCONNECTED)
     const [discoveredDevices, _, addDiscoveredDevice] = useStateList([], 'id')
+    const [bleManager, setBLEManager] = useState(null)
+    const [deviceConnection, setDeviceConnection] = useState(null)
+    const [lastDataPoint, setLastDataPoint] = useState()
+    const [lastError, setLastError] = useState()
 
     // Search for devices
     async function scanForDevices() {
@@ -69,7 +85,7 @@ export default function BluetoothView({ bleManager, setDeviceConnection }) {
                 // search for services and characteristics
                 await device.discoverAllServicesAndCharacteristics()
                 const services = await device.services()
-                
+
                 // find readable characteristics
                 const characteristics = (await Promise.all(
                     services.map(async service => {
@@ -89,6 +105,16 @@ export default function BluetoothView({ bleManager, setDeviceConnection }) {
                 console.log(error)
             })
     }
+
+    // Mount & unmount
+    useEffect(() => {
+        setBLEManager(new BleManager())
+
+        return () => {
+            destroyBLE(bleManager)
+            setBLEManager(null)
+        }
+    }, [])
 
     function renderConnectionComponents() {
         switch (connState) {
@@ -110,7 +136,53 @@ export default function BluetoothView({ bleManager, setDeviceConnection }) {
         }
     }
 
+    // Triggered when notifications come in over Bluetooth
+    function watchForNotifications(error, char) {
+        if (error) {
+            console.log(error.toString())
+            return
+        }
+
+        // Receive packets starting with < and ending with >
+        let packet = Buffer.from(char.value, 'base64').toString()
+        incompleteData = (packet.startsWith('<') ? '' : incompleteData) + packet
+        if (incompleteData.endsWith('>')) {
+            try {
+                const completedTransmission = {
+                    ...JSON.parse(incompleteData.replace(/[\<\>]/g, '')),
+                    time: new Date().toLocaleString()
+                }
+                console.log(`Received complete packet:\n\t${incompleteData}`)
+
+                // separate errors and data transmissions
+                // this is bad -- the correct way would be to subscribe to
+                // different characteristics; however, it's 2AM
+                if(completedTransmission.error)
+                    setLastError(completedTransmission)
+                else {
+                    setLastDataPoint(completedTransmission)
+                    insertIntoDatabase(completedTransmission)
+                }
+                
+            } finally {
+                incompleteData = ''
+            }
+        }
+
+        // length check to not accumulate garbage
+        if (incompleteData.length > 1000)
+            incompleteData = ''
+    }
+
+    useEffect(() => {
+        deviceConnection?.characteristics?.forEach(char => char.monitor(watchForNotifications))
+    }, [deviceConnection])
+
     return (
+        deviceConnection ? 
+        <BluetoothContext.Provider value={{ deviceConnection, lastDataPoint, lastError }}>
+            {children}
+        </BluetoothContext.Provider> :
         <View style={styles.container}>
             <Image source={
                 require('../assets/logo-white.png')
@@ -120,4 +192,12 @@ export default function BluetoothView({ bleManager, setDeviceConnection }) {
             <StatusBar style="auto" />
         </View>
     )
-  }
+}
+
+function destroyBLE(manager) {
+    try {
+        manager && manager.destroy()
+    } catch (err) {
+
+    }
+}

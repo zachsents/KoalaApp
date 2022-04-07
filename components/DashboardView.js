@@ -1,8 +1,7 @@
 import { Buffer } from 'buffer'
 import { useEffect, useState } from 'react'
 import {
-    Text, View, Image, TouchableOpacity,
-    ScrollView, PermissionsAndroid, ActivityIndicator, StyleSheet
+    Text, View, StyleSheet
 } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
 
