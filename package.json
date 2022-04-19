@@ -33,7 +33,8 @@
     "react-native-vector-icons": "^9.1.0",
     "react-native-web": "0.17.1",
     "react-native-webview": "^11.18.1",
-    "realm": "^10.13.0"
+    "realm": "^10.13.0",
+    "@react-native-async-storage/async-storage": "~1.15.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9"
