@@ -4,9 +4,9 @@ import { NavigationContainer } from '@react-navigation/native'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { useBluetooth } from './Bluetooth'
 
-// You can import Ionicons from @expo/vector-icons/Ionicons if you use Expo or
-// react-native-vector-icons/Ionicons otherwise.
-import Ionicons from 'react-native-vector-icons/Ionicons'
+import { FontAwesome } from '@expo/vector-icons'
+import { MaterialIcons } from '@expo/vector-icons'
+import { Entypo } from '@expo/vector-icons'
 
 
 const Tab = createBottomTabNavigator()
@@ -18,18 +18,31 @@ export default function Navigation({ labels, children, ...props }) {
 
     return (
         <NavigationContainer {...props}>
-            <Tab.Navigator>{
-                children?.map((child, i) =>
-                    <Tab.Screen
-                        key={i}
-                        name={labels[i]}
-                        children={() => child}
-                        options={
-                            child.props.displayBadgeForError && lastError && { tabBarBadge: '!' }
+            <Tab.Navigator
+                screenOptions={({ route }) => ({
+                    tabBarIcon: ({ focused, color, size }) => {
+                        switch(route.name) {
+                            case 'Dashboard':
+                                return <FontAwesome name="dashboard" size={size} color={color} />
+                            case 'Map':
+                                return <Entypo name="map" size={size} color={color} />
+                            case 'Device':
+                                return <MaterialIcons name="devices" size={size} color={color} />
                         }
-                    />
-                )
-            }</Tab.Navigator>
+                    },
+                })}
+            >{
+                    children?.map((child, i) =>
+                        <Tab.Screen
+                            key={i}
+                            name={labels[i]}
+                            children={() => child}
+                            options={
+                                child.props.displayBadgeForError && lastError && { tabBarBadge: '!' }
+                            }
+                        />
+                    )
+                }</Tab.Navigator>
         </NavigationContainer>
     )
 }
