@@ -12,6 +12,7 @@ import DataTable from './DataTable'
 import { palette, styles } from '../generalStyles'
 
 import { useDatabase, useStateList } from '../hooks'
+import { useSettings } from './Settings'
 
 // Storage stuff
 const PREV_DEVICE_STORAGE_KEY = '@prev_device'
@@ -45,6 +46,7 @@ export function BluetoothProvider({ children }) {
     const [deviceConnection, setDeviceConnection] = useState(null)
     const [lastDataPoint, setLastDataPoint] = useState()
     const [lastError, setLastError] = useState()
+
 
     // Search for devices
     async function scanForDevices(showGui = true) {
@@ -195,6 +197,10 @@ export function BluetoothProvider({ children }) {
                     setLastError(completedTransmission)
                 else {
                     setLastDataPoint(completedTransmission)
+                    // console.log(settings)
+                    // WHERE I LEFT OFF, grabbing old version of settings,
+                    // need to globalize settings 
+                    // settings.shareData && insertIntoDatabase(completedTransmission)
                     insertIntoDatabase(completedTransmission)
                 }
 

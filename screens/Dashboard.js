@@ -6,8 +6,6 @@ import Group from '../components/Group'
 import Space from '../components/Space'
 import { useBluetooth } from '../components/Bluetooth'
 
-import Button from '../components/Button'
-
 
 export default function Dashboard() {
 
@@ -17,9 +15,9 @@ export default function Dashboard() {
 
     return (
       <>
-        <Text>
+        {/* <Text>
           {lastDataPoint?.time}
-        </Text>
+        </Text> */}
 
         <ScrollView style={styles.view}>
             <Group style={styles.groups} >
@@ -37,7 +35,7 @@ export default function Dashboard() {
                 <CircleIndicator label='PM' number={lastDataPoint?.pm25} max={100} unit='ppm' />
             </Group>
             <Space />
-            <Text>
+            {/* <Text>
               GPS data:
             </Text>
             <Text>
@@ -45,8 +43,8 @@ export default function Dashboard() {
             </Text>
             <Text>
               {lastDataPoint?.longitude}
-            </Text>
-            <Button> Sync</Button>
+            </Text> */}
+            {/* <Button> Sync</Button> */}
             <Space size={100} />
         </ScrollView>
 
